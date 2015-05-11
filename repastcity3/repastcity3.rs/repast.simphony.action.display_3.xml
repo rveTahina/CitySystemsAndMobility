@@ -1,0 +1,64 @@
+<repast.simphony.gis.visualization.engine.GISDisplayDescriptor>
+  <name>3d Display</name>
+  <type>GIS 3D</type>
+  <styles>
+    <entry>
+      <string>repastcity3.agent.Student</string>
+      <string>repast.simphony.visualization.gis3D.style.DefaultMarkStyle</string>
+    </entry>
+    <entry>
+      <string>repastcity3.agent.DefaultAgent</string>
+      <string>repast.simphony.visualization.gis3D.style.DefaultMarkStyle</string>
+    </entry>
+  </styles>
+  <editedStyles>
+    <entry>
+      <string>repastcity3.agent.Student</string>
+      <null/>
+    </entry>
+    <entry>
+      <string>repastcity3.agent.DefaultAgent</string>
+      <null/>
+    </entry>
+  </editedStyles>
+  <netStyles/>
+  <editedNetStyles/>
+  <frequency>ON_NEW</frequency>
+  <schedParams>
+    <start>1.0</start>
+    <interval>1.0</interval>
+    <priority>-Infinity</priority>
+    <pType>LAST</pType>
+    <duration>-1.0</duration>
+    <frequency>REPEAT</frequency>
+    <hashCode>-1582025412</hashCode>
+  </schedParams>
+  <layoutInterval>0</layoutInterval>
+  <layerOrder>
+    <entry>
+      <string>repastcity3.agent.Student</string>
+      <int>1</int>
+    </entry>
+    <entry>
+      <string>repastcity3.agent.DefaultAgent</string>
+      <int>0</int>
+    </entry>
+  </layerOrder>
+  <projections>
+    <repast.simphony.scenario.data.ProjectionData>
+      <id>AgentGeography</id>
+      <attributes/>
+      <type>geography</type>
+    </repast.simphony.scenario.data.ProjectionData>
+  </projections>
+  <projectionDescriptors>
+    <entry>
+      <string>AgentGeography</string>
+      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData"/>
+        <props/>
+      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+    </entry>
+  </projectionDescriptors>
+  <props/>
+</repast.simphony.gis.visualization.engine.GISDisplayDescriptor>
