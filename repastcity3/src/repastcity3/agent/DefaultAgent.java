@@ -18,10 +18,14 @@ along with RepastCity.  If not, see <http://www.gnu.org/licenses/>.
 
 package repastcity3.agent;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,14 +33,19 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JPanel;
+
 import com.vividsolutions.jts.geom.Coordinate;
 
+import repast.simphony.engine.environment.RunListener;
+import repast.simphony.engine.environment.RunState;
+import repast.simphony.userpanel.ui.UserPanelCreator;
 import repastcity3.environment.Building;
 import repastcity3.environment.Route;
 import repastcity3.exceptions.NoIdentifierException;
 import repastcity3.main.ContextManager;
 
-public class DefaultAgent extends AgentClass {
+public class DefaultAgent extends AgentClass{
 
 	private static Logger LOGGER = Logger.getLogger(DefaultAgent.class.getName());
 
@@ -61,6 +70,7 @@ public class DefaultAgent extends AgentClass {
 	//====================================================================================================================================================================
 
 	public DefaultAgent() {
+		
 		this.id = uniqueID++;
 	}
 
@@ -113,14 +123,20 @@ public class DefaultAgent extends AgentClass {
 
 		if (!this.route.atDestination()) {
 			this.route.travel();
-
+			
+//====================================================================================================================================================
 
 			setCurrentRoute();//Pick up the trajectory of the agent from his current place to his destination
 			setCurrentTimeStamp();// Pick up the timestamp from the agent's current place to his destination
 
 			setagentPath(compteur);//Pick up all the agent trajectory during the simulation
 			setAllTimeStamp(compteur,currentTimeStamp);//pick up all the agent timestamp during the simulation
+			
+			
+			ContextManager.setDefaultAgentPath("DefaultAgent"+this.toString(), agentPath);
+			ContextManager.setDefaultAgentTimeStamp("DefaultAgent"+this.toString(), allTimeStamps);
 
+			//=========================================================================================================================================
 
 			LOGGER.log(Level.FINE, this.toString() + " travelling to " + this.route.getDestinationBuilding().toString());
 		} else {
@@ -148,7 +164,7 @@ public class DefaultAgent extends AgentClass {
 
 
 		}
-		serialiseMe(); // serialise this agent
+		//serialiseMe(); // serialise this agent
 
 
 	} // step()
@@ -268,11 +284,21 @@ public class DefaultAgent extends AgentClass {
 		// TODO Auto-generated method stub
 		try
 		{
-			FileOutputStream fileOut = new FileOutputStream("Default"+this.toString()+".ser");
+			/*FileOutputStream fileOut = new FileOutputStream("Default"+this.toString()+".ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(this);
 			out.close();
-			fileOut.close();
+			fileOut.close();*/
+			/*OutputStream file = new FileOutputStream("Default"+this.toString()+".ser");
+		      OutputStream buffer = new BufferedOutputStream(file);
+		      ObjectOutput output = new ObjectOutputStream(buffer);
+		      output.writeObject(this);*/
+			ObjectOutputStream file = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(new File("Default"+this.toString()+".ser"))));
+		      //OutputStream buffer = new BufferedOutputStream(file);
+		      //ObjectOutput output = new ObjectOutputStream(buffer);
+		      //output.writeObject(this);
+			file.writeObject(this);
+			file.close();
 
 		}catch(IOException i)
 		{
@@ -281,6 +307,8 @@ public class DefaultAgent extends AgentClass {
 		}
 
 	}
+
+	
 
 
 }

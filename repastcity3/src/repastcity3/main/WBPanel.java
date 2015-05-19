@@ -50,14 +50,22 @@ public class WBPanel extends JPanel {
 				//On click on the button, export the simulation into KML
 				int a = Integer.parseInt(txtTextPanel.getText());
 			
-				intoKml exportSimulation=new intoKml(a);
+				/*intoKml exportSimulation=new intoKml(a);
 				try {
 					exportSimulation.go();
 				} catch (FileNotFoundException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-
+*/
+				exportIntoKML exportSimulation=new exportIntoKML(a);
+				try {
+					exportSimulation.go();
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
 
 
 				GUIRegistry guiRegistry = RunState.getInstance().getGUIRegistry();

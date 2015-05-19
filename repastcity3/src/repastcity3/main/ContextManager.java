@@ -21,11 +21,19 @@ package repastcity3.main;
 
 
 import java.awt.Color;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -35,6 +43,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
@@ -44,8 +53,10 @@ import repast.simphony.context.space.gis.GeographyFactoryFinder;
 import repast.simphony.context.space.graph.NetworkBuilder;
 import repast.simphony.dataLoader.ContextBuilder;
 import repast.simphony.engine.environment.RunEnvironment;
+import repast.simphony.engine.schedule.IAction;
 import repast.simphony.engine.schedule.ISchedule;
 import repast.simphony.engine.schedule.ScheduleParameters;
+import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.parameter.Parameters;
 import repast.simphony.space.gis.Geography;
 import repast.simphony.space.gis.GeographyParameters;
@@ -91,7 +102,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * can't be because multi-threaded agents will simultaneously try to call 'move()' and interfere with each other. So
 	 * methods like 'moveAgent()' are provided by ContextManager.
 	 */
-
+	int compteur = 0;
 	private static Context<Object> mainContext;
 
 	// building context and projection cab be public (thread safe) because buildings only queried
@@ -107,32 +118,101 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	private static Context<IAgent> agentContext;
 	private static Geography<IAgent> agentGeography;
-	
-	
+
+	static HashMap<String,ArrayList<List<Coordinate>>> DefaultAgentPath = new HashMap<String, ArrayList<List<Coordinate>>>();
+	static HashMap<String,ArrayList<List<Coordinate>>> StudentPath = new HashMap<String, ArrayList<List<Coordinate>>>();
+	static HashMap<String,ArrayList<List<Instant>>> DefaultAgentTimeStamp = new HashMap<String, ArrayList<List<Instant>>>();
+	static HashMap<String,ArrayList<List<Instant>>> StudentTimeStamp = new HashMap<String, ArrayList<List<Instant>>>();
+
+
+
+
 	//======================================================================================================================
 	//Display agent
 	static ArrayList<String> defaultAgentColor = new ArrayList<String>();
 	static ArrayList<String> studentAgentColor = new ArrayList<String>();
 
+	Socket socket1;
+	Socket socket2;
+	int portNumber = 1777;
+	int portNumber2 = 1779;
+	String str = "";
+	static ObjectInputStream ois;
+	static ObjectOutputStream oos;
+	static DataInputStream dis;
+	static DataOutputStream dos;
+
+
+
 	//======================================================================================================================
-	
+
+
 	@Override
 	public Context<Object> build(Context<Object> con) {
+
+		try {
+			socket1 = new Socket(InetAddress.getLocalHost(), portNumber);
+			System.out.println("Socket created, address: "+InetAddress.getLocalHost()+" port number: "+ portNumber);
+			socket2 = new Socket(InetAddress.getLocalHost(), portNumber2);
+			System.out.println("Socket created, address: "+InetAddress.getLocalHost()+" port number: "+ portNumber2);
+		} catch (UnknownHostException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+
+		try {
+			ois = new ObjectInputStream(socket1.getInputStream());
+			
+			dis= new DataInputStream(socket2.getInputStream());
+			System.out.println("InputStream Created");
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+
+		try {
+			oos = new ObjectOutputStream(socket1.getOutputStream());
+			dos = new DataOutputStream(socket2.getOutputStream());
+			System.out.println("OutputStream Created");
+			
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		
-	//======================================================================================================================
+	/*	ISchedule schedule = RunEnvironment.getInstance().getCurrentSchedule();
+		// start at 3, with interval of 3 and priority of 10
+		    schedule.schedule(ScheduleParameters.createRepeating(3, 1, 1), new IAction() {
+		      public void execute() {
+		    	 
+		    	/*  exportIntoKML exportSimulation=new exportIntoKML(30);
+		  		try {
+		  			exportSimulation.go();
+		  			System.out.println("=================================EXPORT IN .KML==============================");
+		  		} catch (FileNotFoundException e1) {
+		  			// TODO Auto-generated catch block
+		  			e1.printStackTrace();
+		      }
+		      }});*/
+
+
+		//======================================================================================================================
 		//launch google earth and the .kml file
-		
+
 		try {
 			Runtime.getRuntime().exec(new String[] {
-			        "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe",
-			        "F:/ESIROI/Stage/Projet/MyFirstRepository/repastcity3/map.kml"
+					"C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe",
+					"F:/ESIROI/Stage/Projet/CitySystemsAndMobility/repastcity3/map.kml"
 			});
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-	//======================================================================================================================
+
+		//======================================================================================================================
 
 		RepastCityLogging.init();
 
@@ -242,23 +322,23 @@ public class ContextManager implements ContextBuilder<Object> {
 
 			AgentFactory agentFactoryStud = new AgentFactory(agentDefnStud);
 			agentFactoryStud.createAgents(agentContext);
-			
-			
-			
+
+
+
 			//======================================Generate an array of COLOR===================================
-			
+
 			for(int i=0;i<AgentFactory.nbrDefaultAgent;i++)
 			{
-			defaultAgentColor.add(generateColor());
-			
-			}
-			
+				defaultAgentColor.add(generateColor());
 
-			
+			}
+
+
+
 			for(int i=0;i<AgentFactory.nbrStudent;i++)
 			{
-			studentAgentColor.add(generateColor());
-			
+				studentAgentColor.add(generateColor());
+
 			}
 
 
@@ -304,6 +384,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		ScheduleParameters stop = ScheduleParameters.createAtEnd(ScheduleParameters.LAST_PRIORITY);
 		schedule.schedule(stop, this, "endMethod");
+
 
 		//===========================================================================================================================================================
 		/*
@@ -617,19 +698,19 @@ public class ContextManager implements ContextBuilder<Object> {
 		return ContextManager.agentGeography;
 	}
 
-	
+
 	//======================================================================================================================================
 	public void endMethod() throws Exception{
-		
+
 		File sim=new File("Simulation.kml");
 		if(!sim.exists()){
-		intoKml ceci=new intoKml(1);
-		try {
-			ceci.go();
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+			intoKml ceci=new intoKml(1);
+			try {
+				ceci.go();
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 		for(int i=0;i<=AgentFactory.nbrStudent;i++){
 
@@ -646,10 +727,14 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		}
 
+		ois.close();
+		oos.close();
+		socket1.close();
+
 		System.out.println("End of the simulation");
 
 	}
-	
+
 	public static String generateColor(){
 		int red = (int) (( Math.random()*255)+1);
 		int green = (int) (( Math.random()*255)+1);
@@ -659,16 +744,70 @@ public class ContextManager implements ContextBuilder<Object> {
 		String RandomRGB2Hex = Integer.toHexString(RandomRGB);
 		return RandomRGB2Hex;
 	}
-	
+
 	public static ArrayList<String> getDefaultAgentColor(){
 		return defaultAgentColor;
 	}
-	
+
 	public static ArrayList<String> getStudentAgentColor(){
 		return studentAgentColor;
 	}
 
+	public  static void setDefaultAgentPath(String ag, ArrayList<List<Coordinate>> coordList){
+		DefaultAgentPath.put(ag, coordList);
+		System.out.println("DefaultAgentPath "+ag+" set");
+	}
 
-//==========================================================================================================================================
+	public static HashMap<String,ArrayList<List<Coordinate>>> getDefaultAgentPath(){
+		return DefaultAgentPath;
+	}
+
+	public  static void setStudentPath(String ag, ArrayList<List<Coordinate>> coordList){
+		StudentPath.put(ag, coordList);
+		System.out.println("StudentPath "+ag+" set");
+	}
+
+	public static HashMap<String,ArrayList<List<Coordinate>>> getStudentPath(){
+		return StudentPath;
+	}
+
+	public static void setStudentTimeStamp(String ag, ArrayList<List<Instant>> tmstp){
+		StudentTimeStamp.put(ag, tmstp);
+		System.out.println("StudentTimeStamp "+ag+" set");
+	}
+
+	public static HashMap<String,ArrayList<List<Instant>>> getStudentTimeStamp(){
+		return StudentTimeStamp;
+	}
+
+	public  static void setDefaultAgentTimeStamp(String ag, ArrayList<List<Instant>> tmstp){
+		DefaultAgentTimeStamp.put(ag, tmstp);
+		System.out.println("DefaultAgentTimeStamp "+ag+" set");
+	}
+
+	public static HashMap<String,ArrayList<List<Instant>>> getDefaultAgentTimeStamp(){
+		return DefaultAgentTimeStamp;
+	}
+
+	public static ObjectOutputStream getOos(){
+		return oos;
+	}
+	
+	public static ObjectInputStream getOis(){
+		return ois;
+	}
+	
+	public static DataOutputStream getDos(){
+		return dos;
+	}
+	
+	public static DataInputStream getDis(){
+		return dis;
+	}
+
+
+
+	//==========================================================================================================================================
 
 }
+

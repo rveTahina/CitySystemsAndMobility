@@ -3,26 +3,46 @@ package repastcity3.agent;
 
 
 
+import java.awt.Color;
+import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+
+import javax.swing.JPanel;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
+import repast.simphony.engine.environment.RunListener;
+import repast.simphony.engine.environment.RunState;
+import repast.simphony.engine.schedule.ScheduledMethod;
+import repast.simphony.userpanel.ui.UserPanelCreator;
 import repastcity3.environment.Building;
 import repastcity3.environment.Route;
 import repastcity3.exceptions.NoIdentifierException;
 import repastcity3.main.ContextManager;
+import repastcity3.main.exportIntoKML;
 import repastcity3.main.intoKml;
 
 
-public class Student extends AgentClass{
+public class Student extends AgentClass {
 
 	private static Logger LOGGER = Logger.getLogger(DefaultAgent.class.getName());
 
@@ -33,6 +53,7 @@ public class Student extends AgentClass{
 
 	public static int uniqueID = 0;
 	private int id;
+	
 
 	//=====================================================================================================================================================================================
 	private static int compteur=0;
@@ -44,19 +65,26 @@ public class Student extends AgentClass{
 
 	private ArrayList<List<Coordinate>> agentPath=new ArrayList<List<Coordinate>>();//ArrayList that content the trajectory of the agent
 	private ArrayList<List<Instant>> allTimeStamps=new ArrayList<List<Instant>>();//ArrayList of all timestamp
+	
+	String StudentColor;
+
+
 
 	//=====================================================================================================================================================================================
 
 	public Student(){
+		//RunState.getInstance().getScheduleRegistry().getScheduleRunner().addRunListener(this);
 
 		this.id = uniqueID++;
+		StudentColor=generateColor();
 
 	}
 
 	@Override
 	public void step() throws Exception {
 
-
+		
+		
 		Building b= ContextManager.buildingContext.getRandomObject();
 
 
@@ -82,14 +110,33 @@ public class Student extends AgentClass{
 			this.route.travel();
 
 			//==================================================================================================================================
-			intoKml exportSimulation=new intoKml(20); // export the simulation into .kml for live simulation in google earth: intoKml(time Stamp)
-			exportSimulation.go();
-
 			setCurrentRoute();//Pick up the trajectory of the agent from his current place to his destination
 			setCurrentTimeStamp();//Pick up the current time stamp
 
 			setagentPath(compteur);
 			setAllTimeStamp(compteur,currentTimeStamp);
+
+			ContextManager.setStudentPath("Student"+this.toString(), agentPath);
+			ContextManager.setStudentTimeStamp("Student"+this.toString(), allTimeStamps);
+
+			setagentPath(compteur);
+			setAllTimeStamp(compteur,currentTimeStamp);
+			
+			System.out.println("AGENTPATH::::"+this.getagentPath());
+			System.out.println("TIMESTAMP:::::"+this.getAllTimeStamp());
+			
+			
+
+			//intoKml exportSimulation=new intoKml(10); // export the simulation into .kml for live simulation in google earth: intoKml(time Stamp)
+			//exportSimulation.go();
+
+			//if((this.agentPath.size()-1) % 10==0){
+			//System.out.println("This.agentpath: "+agentPath.size());
+			//intoKml exportSimulation=new intoKml(10); // export the simulation into .kml for live simulation in google earth: intoKml(time Stamp)
+			//exportSimulation.go();
+			//	}
+
+
 
 			//====================================================================================================================================
 
@@ -122,14 +169,15 @@ public class Student extends AgentClass{
 
 
 		}
-		
-		serialiseMe(); // Tah: Selialise this agent
 
+		
+		ContextManager.getOos().writeUnshared(this);
+		ContextManager.getOos().reset();
 
 	}
 
 	//============================================================================================================================================================================
-	
+
 	//Method for the choice of the destination building
 	public Building randomBuilding(int a) throws NumberFormatException, NoIdentifierException{
 		Building b;
@@ -148,7 +196,7 @@ public class Student extends AgentClass{
 		this.currentCoord=this.route.getListRoute();
 
 	}
-	
+
 	@Override
 	public void getCurrentRoute() {
 		// TODO Auto-generated method stub
@@ -187,6 +235,7 @@ public class Student extends AgentClass{
 			this.agentPath.set(this.agentPath.size()-1,currentCoord);
 
 		}
+
 	}
 
 	//Return the arrayList of all the agent trajectories
@@ -194,15 +243,22 @@ public class Student extends AgentClass{
 		return this.agentPath;
 
 	}
-	
+
 	public void serialiseMe(){ 
 		try
 		{
-			FileOutputStream fileOut = new FileOutputStream("Student"+this.toString()+".ser");
+			/*FileOutputStream fileOut = new FileOutputStream("Student"+this.toString()+".ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(this);
 			out.close();
-			fileOut.close();
+			fileOut.close();*/
+
+			ObjectOutputStream file = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(new File("Student"+this.toString()+".ser"))));
+			//OutputStream buffer = new BufferedOutputStream(file);
+			//ObjectOutput output = new ObjectOutputStream(buffer);
+			//output.writeObject(this);
+			file.writeObject(this);
+			file.close();
 
 		}catch(IOException i)
 		{
@@ -211,8 +267,10 @@ public class Student extends AgentClass{
 		}
 	}
 
-	
-//===================================================================================================================================================
+
+
+
+	//===================================================================================================================================================
 
 	@Override
 	public boolean isThreadable() {
@@ -261,7 +319,39 @@ public class Student extends AgentClass{
 	public int hashCode() {
 		return this.id;
 	}
-
 	
+	public static String generateColor(){
+		int red = (int) (( Math.random()*255)+1);
+		int green = (int) (( Math.random()*255)+1);
+		int blue = (int) (( Math.random()*255)+1);
+		Color RandomC = new Color(red,green,blue);
+		int RandomRGB = (RandomC.getRGB());
+		String RandomRGB2Hex = Integer.toHexString(RandomRGB);
+		return RandomRGB2Hex;
+	}
+	
+	public String getColor(){
+		return StudentColor;
+	}
+	
+	
+
+
+	/*	
+	@ScheduledMethod(start = 50, interval = 100)
+	public void exp(){
+		exportIntoKML exportSimulation=new exportIntoKML(10);
+		try {
+			exportSimulation.go();
+			System.out.println("ooooooooooooooooooooooooooo");
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+	}
+	 */
+
+
 
 }

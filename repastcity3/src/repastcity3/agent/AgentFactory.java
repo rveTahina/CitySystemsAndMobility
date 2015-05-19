@@ -17,6 +17,7 @@ along with RepastCity.  If not, see <http://www.gnu.org/licenses/>.*/
 package repastcity3.agent;
 
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -212,6 +213,13 @@ public class AgentFactory {
 				agentsCreated++;
 
 				nbrStudent=numAgents;// Tah: number of student agents
+				try {
+					ContextManager.getDos().writeInt(nbrStudent);
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 			}
 		}

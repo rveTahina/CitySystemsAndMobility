@@ -6,11 +6,7 @@
 
 package repastcity3.main;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.time.Instant;
 import java.util.List;
 
@@ -55,7 +51,7 @@ public class intoKml {
 		//add the link 
 		//de.micromata.opengis.kml.v_2_2_0.Link lnk=kml.createAndSetNetworkLink().createAndSetLink();
 		de.micromata.opengis.kml.v_2_2_0.Link lnk = new de.micromata.opengis.kml.v_2_2_0.Link();
-		lnk.setHref("F:/ESIROI/Stage/Projet/MyFirstRepository/repastcity3/map.kml");
+		lnk.setHref("F:/ESIROI/Stage/Projet/CitySystemsAndMobility/repastcity3/map.kml");
 		lnk.setRefreshMode(RefreshMode.ON_INTERVAL);
 		lnk.setRefreshInterval(1);
 		/*lnk.setViewRefreshMode(ViewRefreshMode.ON_REGION);
@@ -81,20 +77,22 @@ public class intoKml {
 		{
 			try
 			{
-				FileInputStream fileIn = new FileInputStream("StudentAgent "+l+".ser");
+				/*FileInputStream fileIn = new FileInputStream("StudentAgent "+l+".ser");
 				ObjectInputStream in = new ObjectInputStream(fileIn);
 				s = (Student) in.readObject();
 				in.close();
-				fileIn.close();
+				fileIn.close();*/
+				InputStream file = new FileInputStream("StudentAgent "+l+".ser");
+			      InputStream buffer = new BufferedInputStream(file);
+			      ObjectInput input = new ObjectInputStream (buffer);
+			      s = (Student) input.readObject();
 			}catch(IOException i)
 			{
 				i.printStackTrace();
 				return;
-			}catch(ClassNotFoundException c)
-			{
-				System.out.println("Student class not found");
-				c.printStackTrace();
-				return;
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
 
@@ -104,9 +102,6 @@ public class intoKml {
 				couleurStudent=ContextManager.getStudentAgentColor().get(l);
 			}
 			else{
-				//String couleur=generateColor();
-				System.out.println("Compt:"+compteurStudent);
-				System.out.println("SIZE: "+ContextManager.getStudentAgentColor().size());
 				couleurStudent=ContextManager.getStudentAgentColor().get(l-1);
 			}
 
@@ -123,25 +118,27 @@ public class intoKml {
 		}
 
 
-		//=====================DefaultAgent=========================
+		//=====================DefaultAgent=============================================================================
 		for(int m=0;m<compteurAgent;m++)
 		{
 			try
 			{
-				FileInputStream fileIn = new FileInputStream("DefaultAgent "+m+".ser");
+				/*FileInputStream fileIn = new FileInputStream("DefaultAgent "+m+".ser");
 				ObjectInputStream in = new ObjectInputStream(fileIn);
 				d = (DefaultAgent) in.readObject();
 				in.close();
-				fileIn.close();
+				fileIn.close();*/
+				InputStream file1 = new FileInputStream("DefaultAgent "+m+".ser");
+			      InputStream buffer1 = new BufferedInputStream(file1);
+			      ObjectInput input1 = new ObjectInputStream (buffer1);
+			      d = (DefaultAgent) input1.readObject();
 			}catch(IOException i)
 			{
 				i.printStackTrace();
 				return;
-			}catch(ClassNotFoundException c)
-			{
-				System.out.println("DefaultAgent class not found");
-				c.printStackTrace();
-				return;
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
 			String couleurDefaultAgent;
